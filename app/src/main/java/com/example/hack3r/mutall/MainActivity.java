@@ -1,10 +1,15 @@
 package com.example.hack3r.mutall;
 
 import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.ProgressDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -20,24 +25,26 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
 import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import java.security.Permission;
-import java.util.HashMap;
-
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     ProgressDialog progressDialog;
-    HashMap<String, String> hashMap;
-
+    public static final int SMS_PERMISSIONS_REQUEST = 1;
+    Button read, json;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
+
+        read = (Button) findViewById(R.id.read);
+        json = (Button) findViewById(R.id.json);
+
         setSupportActionBar(toolbar);
 
 
@@ -58,6 +65,21 @@ public class MainActivity extends AppCompatActivity
 
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
+
+        read.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent intent = new Intent(MainActivity.this, ViewInbox.class);
+                startActivity(intent);
+            }
+        });
+
+        json.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+            }
+        });
     }
 
     @Override
@@ -118,11 +140,10 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void sendSms(String mobile, String msg) {
-        //       get permission to send sms
-        Permission permission = new Permission();
-        permission.requestSendPermission();
-//    use smsmanger to send sms to clients
+        //get permission to send sms
+        requestSendPermission();
 
+        //use smsmanger to send sms to clients
         SmsManager mySms = SmsManager.getDefault();
         mySms.sendTextMessage(mobile, null, msg, null, null);
     }
@@ -189,36 +210,30 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    //Create a class to hold all permission requests
-    private class Permission {
-        public static final int READ_SMS_PERMISSIONS_REQUEST = 1;
 
-        public void requestSendPermission() {
-            // Here, thisActivity is the current activity
-            if (ContextCompat.checkSelfPermission(MainActivity.this,
-                    Manifest.permission.SEND_SMS)
-                    != PackageManager.PERMISSION_GRANTED) {
+    public void requestSendPermission() {
+        // Here, thisActivity is the current activity
+        if (ContextCompat.checkSelfPermission(MainActivity.this,
+                Manifest.permission.SEND_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
 
-                Toast.makeText(getApplicationContext(), "permission error", Toast.LENGTH_LONG).show();
+            Toast.makeText(getApplicationContext(), "permission error", Toast.LENGTH_LONG).show();
 
-                if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
-                        Manifest.permission.SEND_SMS)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                    Manifest.permission.SEND_SMS)) {
 
-                    Toast.makeText(MainActivity.this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Please allow permission!", Toast.LENGTH_SHORT).show();
 
-                } else {
+            } else {
 
-                    //request the permission
-                    ActivityCompat.requestPermissions(MainActivity.this,
-                            new String[]{Manifest.permission.SEND_SMS}, READ_SMS_PERMISSIONS_REQUEST);
+                //request the permission
+                ActivityCompat.requestPermissions(MainActivity.this,
+                        new String[]{Manifest.permission.SEND_SMS}, SMS_PERMISSIONS_REQUEST);
 
-                }
             }
         }
-
-        public void requestReadRequest() {
-
-        }
-
     }
+
+
 }
+
