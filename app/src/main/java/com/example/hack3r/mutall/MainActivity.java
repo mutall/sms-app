@@ -1,10 +1,16 @@
 package com.example.hack3r.mutall;
 
+import android.Manifest;
 import android.app.ProgressDialog;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.View;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -14,24 +20,28 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+
+import java.security.Permission;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-ProgressDialog progressDialog;
-HashMap<String, String > hashMap;
+    ProgressDialog progressDialog;
+    HashMap<String, String> hashMap;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        Post_Name post_name=new Post_Name();
-        post_name.execute();
 
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -40,19 +50,19 @@ HashMap<String, String > hashMap;
             }
         });
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
     }
 
     @Override
     public void onBackPressed() {
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
@@ -102,37 +112,113 @@ HashMap<String, String > hashMap;
 
         }
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        DrawerLayout drawer = findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
     }
 
-    class Post_Name extends AsyncTask<Void, Void, Void>{
+    private void sendSms(String mobile, String msg) {
+        //       get permission to send sms
+        Permission permission = new Permission();
+        permission.requestSendPermission();
+//    use smsmanger to send sms to clients
+
+        SmsManager mySms = SmsManager.getDefault();
+        mySms.sendTextMessage(mobile, null, msg, null, null);
+    }
+
+    private class GetJson extends AsyncTask<Void, Void, Void> {
         @Override
         protected void onPreExecute() {
-            progressDialog=new ProgressDialog(MainActivity.this);
+            super.onPreExecute();
+            progressDialog = new ProgressDialog(MainActivity.this);
+            progressDialog.setMessage("NGOJEA KIDOGO...");
             progressDialog.setCancelable(false);
-            progressDialog.setMessage("Posting String");
             progressDialog.show();
         }
 
         @Override
         protected Void doInBackground(Void... voids) {
-            hashMap=new HashMap<>();
-            hashMap.put("name", "My name is samuel");
-            String url="http://mutall.co.ke/receive.php?q=";
+            Httphandler myhandler = new Httphandler();
+            String kenyaPower = myhandler.makeServiceCall();
+//            Log.i("q", kenyaPower);
 
-            Httphandler httphandler=new Httphandler();
-            httphandler.postRequest(url, hashMap);
-            httphandler.makeServiceCall(url, "Hello Java");
+            if (kenyaPower != null) {
+                try {
+                    JSONArray bills = new JSONArray(kenyaPower);
+
+                    //looping through all clients
+                    for (int i = 0; i < bills.length(); i++) {
+                        JSONArray x = bills.getJSONArray(i);
+
+                        for (int j = 0; j < x.length(); j++) {
+                            String mobile = x.getString(0);
+                            String account = x.getString(1);
+                            sendSms(mobile, account);
+
+                        }
+                    }
+
+                } catch (final JSONException e) {
+                    Log.e("Parse error", e.getMessage());
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+            } else {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(getApplicationContext(), "ARRAY IS NULL", Toast.LENGTH_LONG).show();
+                    }
+                });
+            }
             return null;
         }
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            if(progressDialog.isShowing()){
+            super.onPostExecute(aVoid);
+            if (progressDialog.isShowing()) {
                 progressDialog.dismiss();
+                Toast.makeText(MainActivity.this, "SMS SENT", Toast.LENGTH_LONG).show();
             }
         }
+    }
+
+    //Create a class to hold all permission requests
+    private class Permission {
+        public static final int READ_SMS_PERMISSIONS_REQUEST = 1;
+
+        public void requestSendPermission() {
+            // Here, thisActivity is the current activity
+            if (ContextCompat.checkSelfPermission(MainActivity.this,
+                    Manifest.permission.SEND_SMS)
+                    != PackageManager.PERMISSION_GRANTED) {
+
+                Toast.makeText(getApplicationContext(), "permission error", Toast.LENGTH_LONG).show();
+
+                if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
+                        Manifest.permission.SEND_SMS)) {
+
+                    Toast.makeText(MainActivity.this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+
+                } else {
+
+                    //request the permission
+                    ActivityCompat.requestPermissions(MainActivity.this,
+                            new String[]{Manifest.permission.SEND_SMS}, READ_SMS_PERMISSIONS_REQUEST);
+
+                }
+            }
+        }
+
+        public void requestReadRequest() {
+
+        }
+
     }
 }
