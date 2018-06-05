@@ -31,11 +31,14 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import java.util.ArrayList;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     ProgressDialog progressDialog;
     public static final int SMS_PERMISSIONS_REQUEST = 1;
     Button read, json;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,15 +50,6 @@ public class MainActivity extends AppCompatActivity
 
         setSupportActionBar(toolbar);
 
-
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -77,7 +71,8 @@ public class MainActivity extends AppCompatActivity
         json.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-
+                GetJson getJson = new GetJson();
+                getJson.execute();
             }
         });
     }
@@ -162,8 +157,6 @@ public class MainActivity extends AppCompatActivity
         protected Void doInBackground(Void... voids) {
             Httphandler myhandler = new Httphandler();
             String kenyaPower = myhandler.makeServiceCall();
-//            Log.i("q", kenyaPower);
-
             if (kenyaPower != null) {
                 try {
                     JSONArray bills = new JSONArray(kenyaPower);
@@ -172,12 +165,13 @@ public class MainActivity extends AppCompatActivity
                     for (int i = 0; i < bills.length(); i++) {
                         JSONArray x = bills.getJSONArray(i);
 
-                        for (int j = 0; j < x.length(); j++) {
-                            String mobile = x.getString(0);
-                            String account = x.getString(1);
-                            sendSms(mobile, account);
+                        String mobile = x.getString(0);
+                        String account = x.getString(1);
 
-                        }
+
+                        sendSms(mobile, account);
+
+
                     }
 
                 } catch (final JSONException e) {
