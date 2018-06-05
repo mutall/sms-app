@@ -27,17 +27,15 @@ public class CustomAdapter extends ArrayAdapter<Sms>{
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         if(convertView == null){
             convertView = LayoutInflater.from(context).inflate(R.layout.sms_inflater, parent, false);
-            Sms currentObject = objectList.get(position);
-
-            TextView smsMobile = (TextView)convertView.findViewById(R.id.mobile);
-            smsMobile.setText(currentObject.getSmsNumber());
-
-            TextView smsBody = (TextView)convertView.findViewById(R.id.sms);
-            smsBody.setText(currentObject.getSmsBody());
-
-
-
         }
+        Sms currentObject = objectList.get(position);
+
+        TextView smsMobile = (TextView)convertView.findViewById(R.id.mobile);
+        smsMobile.setText(currentObject.getSmsNumber());
+
+        TextView smsBody = (TextView)convertView.findViewById(R.id.sms);
+        smsBody.setText(currentObject.getSmsBody());
+
         return convertView;
     }
 }
