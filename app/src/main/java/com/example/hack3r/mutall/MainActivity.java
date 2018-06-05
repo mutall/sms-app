@@ -1,5 +1,7 @@
 package com.example.hack3r.mutall;
 
+import android.app.ProgressDialog;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -13,15 +15,21 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import java.util.HashMap;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
-
+ProgressDialog progressDialog;
+HashMap<String, String > hashMap;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+        Post_Name post_name=new Post_Name();
+        post_name.execute();
+
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
@@ -97,5 +105,34 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    class Post_Name extends AsyncTask<Void, Void, Void>{
+        @Override
+        protected void onPreExecute() {
+            progressDialog=new ProgressDialog(MainActivity.this);
+            progressDialog.setCancelable(false);
+            progressDialog.setMessage("Posting String");
+            progressDialog.show();
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            hashMap=new HashMap<>();
+            hashMap.put("name", "My name is samuel");
+            String url="http://mutall.co.ke/receive.php?q=";
+
+            Httphandler httphandler=new Httphandler();
+            httphandler.postRequest(url, hashMap);
+            httphandler.makeServiceCall(url, "Hello Java");
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            if(progressDialog.isShowing()){
+                progressDialog.dismiss();
+            }
+        }
     }
 }
