@@ -4,6 +4,10 @@ public class Sms {
     private String smsBody;
     private String smsNumber;
 
+    public Sms(String mobile, String smsMessage ){
+        this.smsBody = smsMessage;
+        this.smsNumber = mobile;
+    }
     public String getSmsBody() {
         return smsBody;
     }
