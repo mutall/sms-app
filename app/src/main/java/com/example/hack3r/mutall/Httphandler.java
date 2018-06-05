@@ -26,12 +26,14 @@ public class Httphandler {
     }
     //method to make a service call to the url
 
-    public String makeServiceCall(String reqUrl, String opt) {
+    public String makeServiceCall() {
         //define a response to be returned at the end of the method
         String response = null;
+        //Define the request url
+        String reqUrl="http://mutall.co.ke/mutall_rental/request.php";
         try {
             //create a new url using our requset url
-            URL url = new URL(reqUrl+opt);
+            URL url = new URL(reqUrl);
 
             //open the connection using HttpURLConnection
             HttpURLConnection myConn = (HttpURLConnection) url.openConnection();
@@ -81,7 +83,7 @@ public class Httphandler {
         return builder.toString();
     }
 
-    public void postRequest(String myUrl, HashMap<String, String>params) {
+    public void postRequest(String myUrl, HashMap<String, String> params) {
         try {
             URL url = new URL(myUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -107,10 +109,11 @@ public class Httphandler {
             e.printStackTrace();
         }
     }
+
     private String getPostDataString(HashMap<String, String> params) throws UnsupportedEncodingException {
         StringBuilder result = new StringBuilder();
         boolean first = true;
-        for(Map.Entry<String, String> entry : params.entrySet()){
+        for (Map.Entry<String, String> entry : params.entrySet()) {
             if (first)
                 first = false;
             else
