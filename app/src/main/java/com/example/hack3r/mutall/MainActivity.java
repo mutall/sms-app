@@ -30,7 +30,7 @@ public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     ProgressDialog progressDialog;
     public static final int SMS_PERMISSIONS_REQUEST = 1;
-    Button read, json;
+    Button read, json, volley;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity
 
         read = (Button) findViewById(R.id.read);
         json = (Button) findViewById(R.id.json);
-
+        volley = (Button) findViewById(R.id.volley);
         setSupportActionBar(toolbar);
 
 
@@ -62,6 +62,14 @@ public class MainActivity extends AppCompatActivity
         });
 
         json.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                GetJson getJson = new GetJson();
+                getJson.execute();
+            }
+        });
+
+        volley.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 GetJson getJson = new GetJson();
@@ -217,6 +225,9 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    public void post(){
 
+
+    }
 }
 

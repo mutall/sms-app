@@ -83,7 +83,7 @@ public class Httphandler {
         return builder.toString();
     }
 
-    public void postRequest(String myUrl, HashMap<String, String> params) {
+    public void postRequest(String myUrl, String params) {
         try {
             URL url = new URL(myUrl);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -97,7 +97,7 @@ public class Httphandler {
             OutputStream os = conn.getOutputStream();
             BufferedWriter writer = new BufferedWriter(
                     new OutputStreamWriter(os, "UTF-8"));
-            writer.write(getPostDataString(params));
+            writer.write(params);
             writer.flush();
             writer.close();
             os.close();
