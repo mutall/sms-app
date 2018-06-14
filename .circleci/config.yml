@@ -20,7 +20,7 @@ jobs:
       # Customize the JVM maximum heap limit
       JVM_OPTS: -Xmx3200m
       TERM: dumb
-    
+      ANDROID_HOME: /usr/local/android-sdk-linux ./gradlew dependencies
     steps:
       - checkout
 
@@ -37,7 +37,7 @@ jobs:
           paths:
             - ~/.gradle
           key: v1-dependencies-{{ checksum "build.gradle" }}
-        
+
       # run tests!
       - run: gradle test
 
