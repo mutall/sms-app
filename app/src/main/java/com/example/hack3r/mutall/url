@@ -1,0 +1,19 @@
+<button>
+    <a href='http://localhost/mutall_rental/?request=send_sms_2kplc&job=temp'>Retrieve SMS from remote server, mutall.co.ke, to phone</a>
+</button>
+
+<button>
+    <a href='http://localhost/mutall_rental/?request=push_msg_to_server'> Push returned Sms from 95551 to Server mutall.co.ke </a>
+</button>
+<button>
+    Clear Messages by 95551
+</button>
+<button>
+    <a href='http://localhost/mutall_rental/?request=push_bills_to_server'> Push (traditionally) received bills from KPLC to Server mutall.co.ke </a>
+</button>
+<button>
+    Clear Bills Sent by KPLC
+</button>
+
+<button>
+    <a href='http://localhost/mutall_rental'> Home page </a>

@@ -1,9 +1,24 @@
 <resources>
     <string name="app_name">Mutall</string>
+    <string name="button1">READ MESSAGES</string>
+    <string name="button2">RETRIEVE ACCOUNTS FROM SERVER </string>
+    <string name="button3">CLEAR MESSAGES</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="nav_header_title">Android Studio</string>
     <string name="nav_header_subtitle">android.studio@android.com</string>
     <string name="nav_header_desc">Navigation header</string>
     <string name="action_settings">Settings</string>
+    <string name="sms_type">Pick which sms to view</string>
+    <string name="send_sms">Send Bulk sms?</string>
+    <string name="send">Fire Away</string>
+    <string name="cancel">Nope, Hold it</string>
+    <string name="alert_edit">eg:http://mutall.co.ke/</string>
+    <string name="alert_edit_title">"Enter Your Server Url "</string>
+    <string name="delete_inbox">SELECT WHICH INBOX TO DELETE</string>
+
+    <string-array name="mtype">
+        <item>KenyaPower</item>
+        <item>95551</item>
+    </string-array>
 </resources>

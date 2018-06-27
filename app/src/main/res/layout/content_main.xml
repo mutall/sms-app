@@ -9,18 +9,18 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="70dp"
-        android:text="Read Kenya Power Messages" />
-
-    <Button
-        android:id="@+id/json"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Request accounts from server " />
+        android:text="@string/button1" />
 
     <Button
         android:id="@+id/volley"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Request volley " />
+        android:text="@string/button2" />
+
+    <Button
+        android:id="@+id/clear_message"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/button3" />
 
     </LinearLayout>
