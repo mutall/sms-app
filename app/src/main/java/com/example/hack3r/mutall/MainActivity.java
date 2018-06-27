@@ -1,10 +1,20 @@
 package com.example.hack3r.mutall;
 
 import android.Manifest;
+import android.annotation.TargetApi;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.app.ProgressDialog;
+import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteException;
+import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
@@ -22,27 +32,38 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
     ProgressDialog progressDialog;
     public static final int SMS_PERMISSIONS_REQUEST = 1;
-    Button read, json, volley;
+    Button read, volley, delete;
+    String[] message_type;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
+        message_type = getResources().getStringArray(R.array.mtype);
 
         read = (Button) findViewById(R.id.read);
-        json = (Button) findViewById(R.id.json);
         volley = (Button) findViewById(R.id.volley);
+        delete = (Button) findViewById(R.id.clear_message);
         setSupportActionBar(toolbar);
-
 
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -53,31 +74,102 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+
         read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Intent intent = new Intent(MainActivity.this, ViewInbox.class);
-                startActivity(intent);
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+                mBuilder.setTitle(R.string.sms_type);
+                mBuilder.setItems(message_type, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        Intent intent = new Intent(MainActivity.this, ViewInbox.class);
+                        intent.putExtra("type", message_type[i]);
+                        startActivity(intent);
+
+                        dialogInterface.dismiss();
+                    }
+                });
+
+                AlertDialog mDialog = mBuilder.create();
+                mDialog.show();
             }
+
+
         });
 
-        json.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                GetJson getJson = new GetJson();
-                getJson.execute();
-            }
-        });
 
         volley.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                GetJson getJson = new GetJson();
-                getJson.execute();
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+                mBuilder.setTitle("SEND SMS")
+                        .setMessage("Do you want to send bulk sms?")
+                        .setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                String url = "http://mutall.co.ke/mutall_rental/?request=send_sms_2kplc&job=temp";
+                //                getArrayVolley(url);
+                                getVolley(url);
+
+                            }
+                        })
+                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        });
+
+                AlertDialog mDialog = mBuilder.create();
+                mDialog.show();
             }
         });
-    }
+        delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_SMS)
+                        != PackageManager.PERMISSION_GRANTED) {
+                    requestReadRequest();
+                }
+                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
+                mBuilder.setTitle(R.string.delete_inbox);
+                mBuilder.setItems(message_type, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        deleteMessages(message_type[i]);
+                        dialogInterface.dismiss();
+                    }
+                });
 
+                AlertDialog mDialog = mBuilder.create();
+                mDialog.show();
+            }
+
+
+        });
+
+    }
+    public void deleteMessages(String address) {
+        int COUNT = 0;
+        String selection = '\''+address+'\'';
+        ContentResolver contentResolver = getContentResolver();
+        try {
+            Uri uri = Uri.parse("content://sms/inbox");
+            Cursor smsInboxCursor = contentResolver.query(uri, null, "address=" + selection, null, null);
+            if (smsInboxCursor.moveToFirst()) {
+
+                do {
+                    COUNT = contentResolver.delete(Uri.parse("content://sms"), null, null);
+                } while (smsInboxCursor.moveToNext());
+                showToast(Integer.toString(COUNT) + " Messages Deleted");
+            }
+        }catch (SQLiteException e){
+//              For debbugging
+            Log.e("err", e.getMessage());
+            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+        }
+    }
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
@@ -135,85 +227,63 @@ public class MainActivity extends AppCompatActivity
         return true;
     }
 
-    private void sendSms(String mobile, String msg) {
-        //get permission to send sms
-        requestSendPermission();
 
-        //use smsmanger to send sms to clients
-        SmsManager mySms = SmsManager.getDefault();
-        mySms.sendTextMessage(mobile, null, msg, null, null);
-    }
+    public void getVolley(String url) {
 
-    private class GetJson extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            progressDialog = new ProgressDialog(MainActivity.this);
-            progressDialog.setMessage("NGOJEA KIDOGO...");
-            progressDialog.setCancelable(false);
-            progressDialog.show();
-        }
+        // Instantiate the RequestQueue.
+        RequestQueue queue = Volley.newRequestQueue(this);
 
-        @Override
-        protected Void doInBackground(Void... voids) {
-            Httphandler myhandler = new Httphandler();
-            String kenyaPower = myhandler.makeServiceCall();
-            if (kenyaPower != null) {
-                try {
-                    JSONArray bills = new JSONArray(kenyaPower);
+// Request a string response from the provided URL.
 
-                    //looping through all clients
-                    for (int i = 0; i < bills.length(); i++) {
-                        JSONArray x = bills.getJSONArray(i);
-
-                        String mobile = x.getString(0);
-                        String account = x.getString(1);
-                        sendSms(mobile, account);
-                    }
-
-                } catch (final JSONException e) {
-                    Log.e("Parse error", e.getMessage());
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
-            } else {
-                runOnUiThread(new Runnable() {
+        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
+                new Response.Listener<String>() {
                     @Override
-                    public void run() {
-                        Toast.makeText(getApplicationContext(), "ARRAY IS NULL", Toast.LENGTH_LONG).show();
+                    public void onResponse(String response) {
+                        try {
+                            JSONArray bills = new JSONArray(response);
+
+                            //looping through all clients
+                            for (int i = 0; i < bills.length(); i++) {
+                                JSONArray x = bills.getJSONArray(i);
+
+                                String mobile = x.getString(0);
+                                String account = x.getString(1);
+                                sendSms(mobile, account);
+                            }
+
+                        } catch (final JSONException e) {
+                            Log.e("Parse error", e.getMessage());
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
                     }
-                });
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                showToast("Something went wrong");
             }
-            return null;
-        }
+        });
 
-        @Override
-        protected void onPostExecute(Void aVoid) {
-            super.onPostExecute(aVoid);
-            if (progressDialog.isShowing()) {
-                progressDialog.dismiss();
-                Toast.makeText(MainActivity.this, "SMS SENT", Toast.LENGTH_LONG).show();
-            }
-        }
+// Add the request to the RequestQueue.
+        queue.add(stringRequest);
+
+
     }
-
 
     public void requestSendPermission() {
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(MainActivity.this,
                 Manifest.permission.SEND_SMS)
                 != PackageManager.PERMISSION_GRANTED) {
-
-            Toast.makeText(getApplicationContext(), "permission error", Toast.LENGTH_LONG).show();
+            showToast("permission error");
 
             if (ActivityCompat.shouldShowRequestPermissionRationale(MainActivity.this,
                     Manifest.permission.SEND_SMS)) {
-
-                Toast.makeText(MainActivity.this, "Please allow permission!", Toast.LENGTH_SHORT).show();
+                showToast("Please allow permission!");
 
             } else {
 
@@ -225,9 +295,32 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
-    public void post(){
-
+    public void showToast(String message) {
+        Toast toast = Toast.makeText(getApplicationContext(), message, Toast.LENGTH_LONG);
+        toast.show();
 
     }
+
+    private void sendSms(String mobile, String msg) {
+        //get permission to send sms
+        requestSendPermission();
+        //use smsmanger to send sms to clients
+        SmsManager mySms = SmsManager.getDefault();
+        mySms.sendTextMessage(mobile, null, msg, null, null);
+    }
+
+    @TargetApi(Build.VERSION_CODES.M)
+    public void requestReadRequest() {
+        if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_SMS)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (shouldShowRequestPermissionRationale(
+                    Manifest.permission.READ_SMS)) {
+                Toast.makeText(getApplicationContext(), "Please allow permission!", Toast.LENGTH_SHORT).show();
+            }
+            requestPermissions(new String[]{Manifest.permission.READ_SMS},
+                    SMS_PERMISSIONS_REQUEST);
+        }
+    }
+
 }
 
