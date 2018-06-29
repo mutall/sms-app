@@ -29,6 +29,10 @@
         <activity android:name=".ViewInbox">
 
         </activity>
+
+        <activity android:name=".Accounts">
+
+        </activity>
     </application>
 
 </manifest>

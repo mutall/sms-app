@@ -74,7 +74,6 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-
         read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -102,27 +101,10 @@ public class MainActivity extends AppCompatActivity
         volley.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder mBuilder = new AlertDialog.Builder(MainActivity.this);
-                mBuilder.setTitle("SEND SMS")
-                        .setMessage("Do you want to send bulk sms?")
-                        .setPositiveButton(R.string.send, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                String url = "http://mutall.co.ke/mutall_rental/?request=send_sms_2kplc&job=temp";
-                //                getArrayVolley(url);
-                                getVolley(url);
+                requestSendPermission();
 
-                            }
-                        })
-                        .setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                dialogInterface.dismiss();
-                            }
-                        });
-
-                AlertDialog mDialog = mBuilder.create();
-                mDialog.show();
+                Intent intent = new Intent(getApplicationContext(), Accounts.class);
+                startActivity(intent);
             }
         });
         delete.setOnClickListener(new View.OnClickListener() {
@@ -150,6 +132,7 @@ public class MainActivity extends AppCompatActivity
         });
 
     }
+
     public void deleteMessages(String address) {
         int COUNT = 0;
         String selection = '\''+address+'\'';
@@ -228,51 +211,6 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    public void getVolley(String url) {
-
-        // Instantiate the RequestQueue.
-        RequestQueue queue = Volley.newRequestQueue(this);
-
-// Request a string response from the provided URL.
-
-        StringRequest stringRequest = new StringRequest(Request.Method.GET, url,
-                new Response.Listener<String>() {
-                    @Override
-                    public void onResponse(String response) {
-                        try {
-                            JSONArray bills = new JSONArray(response);
-
-                            //looping through all clients
-                            for (int i = 0; i < bills.length(); i++) {
-                                JSONArray x = bills.getJSONArray(i);
-
-                                String mobile = x.getString(0);
-                                String account = x.getString(1);
-                                sendSms(mobile, account);
-                            }
-
-                        } catch (final JSONException e) {
-                            Log.e("Parse error", e.getMessage());
-                            runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    Toast.makeText(getApplicationContext(), e.getMessage(), Toast.LENGTH_LONG).show();
-                                }
-                            });
-                        }
-                    }
-                }, new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                showToast("Something went wrong");
-            }
-        });
-
-// Add the request to the RequestQueue.
-        queue.add(stringRequest);
-
-
-    }
 
     public void requestSendPermission() {
         // Here, thisActivity is the current activity
@@ -301,13 +239,6 @@ public class MainActivity extends AppCompatActivity
 
     }
 
-    private void sendSms(String mobile, String msg) {
-        //get permission to send sms
-        requestSendPermission();
-        //use smsmanger to send sms to clients
-        SmsManager mySms = SmsManager.getDefault();
-        mySms.sendTextMessage(mobile, null, msg, null, null);
-    }
 
     @TargetApi(Build.VERSION_CODES.M)
     public void requestReadRequest() {
